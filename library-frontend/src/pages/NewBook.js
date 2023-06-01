@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { ADD_BOOK, ALL_BOOKS, ALL_AUTHORS } from '../queries';
 
-const NewBook = (props) => {
+const NewBook = () => {
 	const [title, setTitle] = useState('');
 	const [author, setAuthor] = useState('');
 	const [published, setPublished] = useState('');
@@ -17,24 +17,19 @@ const NewBook = (props) => {
 				'🚀 ~ file: NewBook.js:16 ~ NewBook ~ messages:',
 				messages
 			);
-		},
+		}
 	});
-
-	if (!props.show) {
-		return null;
-	}
 
 	const submit = async (event) => {
 		event.preventDefault();
 
-		console.log('add book...');
 		await addBook({
 			variables: {
 				title,
 				published: parseInt(published),
 				author,
-				genres,
-			},
+				genres
+			}
 		});
 
 		setTitle('');
