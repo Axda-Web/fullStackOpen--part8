@@ -12,7 +12,7 @@ const NewBook = () => {
 	const [addBook] = useMutation(ADD_BOOK, {
 		refetchQueries: [{ query: ALL_BOOKS }, { query: ALL_AUTHORS }],
 		onError: (error) => {
-			const messages = error.graphQLErrors[0].message;
+			const messages = error.graphQLErrors[0]?.message;
 			console.log(
 				'🚀 ~ file: NewBook.js:16 ~ NewBook ~ messages:',
 				messages
