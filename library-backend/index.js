@@ -1,5 +1,7 @@
 const { ApolloServer } = require('@apollo/server');
+const { UserInputError } = require('apollo-server-errors');
 const { startStandaloneServer } = require('@apollo/server/standalone');
+const { GraphQLError } = require('graphql');
 // const { v4: uuidv4 } = require('uuid');
 
 const mongoose = require('mongoose');
@@ -22,108 +24,12 @@ mongoose
 		console.log('error connection to MongoDB:', error.message);
 	});
 
-// let authors = [
-// 	{
-// 		name: 'Robert Martin',
-// 		id: 'afa51ab0-344d-11e9-a414-719c6709cf3e',
-// 		born: 1952
-// 	},
-// 	{
-// 		name: 'Martin Fowler',
-// 		id: 'afa5b6f0-344d-11e9-a414-719c6709cf3e',
-// 		born: 1963
-// 	},
-// 	{
-// 		name: 'Fyodor Dostoevsky',
-// 		id: 'afa5b6f1-344d-11e9-a414-719c6709cf3e',
-// 		born: 1821
-// 	},
-// 	{
-// 		name: 'Joshua Kerievsky', // birthyear not known
-// 		id: 'afa5b6f2-344d-11e9-a414-719c6709cf3e'
-// 	},
-// 	{
-// 		name: 'Sandi Metz', // birthyear not known
-// 		id: 'afa5b6f3-344d-11e9-a414-719c6709cf3e'
-// 	}
-// ];
-
-/*
- * Suomi:
- * Saattaisi olla järkevämpää assosioida kirja ja sen tekijä tallettamalla kirjan yhteyteen tekijän nimen sijaan tekijän id
- * Yksinkertaisuuden vuoksi tallennamme kuitenkin kirjan yhteyteen tekijän nimen
- *
- * English:
- * It might make more sense to associate a book with its author by storing the author's id in the context of the book instead of the author's name
- * However, for simplicity, we will store the author's name in connection with the book
- *
- * Spanish:
- * Podría tener más sentido asociar un libro con su autor almacenando la id del autor en el contexto del libro en lugar del nombre del autor
- * Sin embargo, por simplicidad, almacenaremos el nombre del autor en conección con el libro
- */
-
-// let books = [
-// 	{
-// 		title: 'Clean Code',
-// 		published: 2008,
-// 		author: 'Robert Martin',
-// 		id: 'afa5b6f4-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['refactoring']
-// 	},
-// 	{
-// 		title: 'Agile software development',
-// 		published: 2002,
-// 		author: 'Robert Martin',
-// 		id: 'afa5b6f5-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['agile', 'patterns', 'design']
-// 	},
-// 	{
-// 		title: 'Refactoring, edition 2',
-// 		published: 2018,
-// 		author: 'Martin Fowler',
-// 		id: 'afa5de00-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['refactoring']
-// 	},
-// 	{
-// 		title: 'Refactoring to patterns',
-// 		published: 2008,
-// 		author: 'Joshua Kerievsky',
-// 		id: 'afa5de01-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['refactoring', 'patterns']
-// 	},
-// 	{
-// 		title: 'Practical Object-Oriented Design, An Agile Primer Using Ruby',
-// 		published: 2012,
-// 		author: 'Sandi Metz',
-// 		id: 'afa5de02-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['refactoring', 'design']
-// 	},
-// 	{
-// 		title: 'Crime and punishment',
-// 		published: 1866,
-// 		author: 'Fyodor Dostoevsky',
-// 		id: 'afa5de03-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['classic', 'crime']
-// 	},
-// 	{
-// 		title: 'The Demon ',
-// 		published: 1872,
-// 		author: 'Fyodor Dostoevsky',
-// 		id: 'afa5de04-344d-11e9-a414-719c6709cf3e',
-// 		genres: ['classic', 'revolution']
-// 	}
-// ];
-
-/*
-  you can remove the placeholder query once your first own has been implemented 
-*/
-
 const typeDefs = `
   type Author {
     name: String!
     id: ID!
     born: Int
-    bookCount: Int
+    bookCount: Int!
   }
 
   type Book {
@@ -154,68 +60,95 @@ const typeDefs = `
 
 const resolvers = {
 	Author: {
-		bookCount: (root) => {
-			// return books.filter((b) => b.author === root.name).length;
+		bookCount: async (root) => {
+			const author = await Author.findOne({ name: root.name });
+			const authorBooks = await Book.find({ author: author.id });
+			return authorBooks.length;
 		}
 	},
 	Query: {
 		bookCount: () => Book.collection.countDocuments(),
 		authorCount: () => Author.collection.countDocuments(),
-		allBooks: (root, args) => {
-			if (!args) {
-				return Book.find({});
+		allBooks: async (root, args) => {
+			if (args.author && args.genre) {
+				const author = await Author.findOne({ name: args.author });
+				if (!!author) {
+					const filteredBooks = await Book.find({
+						author: author.id,
+						genres: { $in: args.genre }
+					}).populate('author');
+					return filteredBooks;
+				}
 			}
-			// let filteredBooks = books;
 
-			// if (args.author) {
-			// 	filteredBooks = filteredBooks.filter(
-			// 		(b) => b.author === args.author
-			// 	);
-			// }
+			if (args.author) {
+				const author = await Author.findOne({ name: args.author });
+				if (!!author) {
+					const filteredBooks = await Book.find({
+						author: author.id
+					}).populate('author');
+					return filteredBooks;
+				}
+			}
 
-			// if (args.genre) {
-			// 	filteredBooks = filteredBooks.filter((b) =>
-			// 		b.genres.includes(args.genre)
-			// 	);
-			// }
+			if (args.genre) {
+				const filterredBooks = await Book.find({
+					genres: { $in: args.genre }
+				}).populate('author');
+				return filterredBooks;
+			}
 
-			// return filteredBooks;
+			const books = await Book.find({}).populate('author');
+			return books;
 		},
-		allAuthors: () => Author.find({})
+		allAuthors: async () => {
+			return await Author.find({});
+		}
 	},
 	Mutation: {
 		addBook: async (root, args) => {
-			// if (!authors.find((a) => a.name === args.author)) {
-			// 	authors = [...authors, { name: args.author, id: uuidv4() }];
-			// }
+			const bookAlreadyExists = await Book.findOne({
+				title: args.title
+			});
+			const authorAlreadyExists = await Author.findOne({
+				name: args.author
+			});
 
-			// const newBook = { ...args, id: uuidv4() };
-			// books = [...books, newBook];
-			// return newBook;
-			const book = new Book({ ...args });
-
-			try {
-				await book.save();
-			} catch (error) {
-				throw new GraphQLError('Saving book failed', {
-					extensions: {
-						code: 'BAD_USER_INPUT',
-						invalidArgs: args.title,
-						error
-					}
+			if (bookAlreadyExists) {
+				throw new UserInputError('Book already exists', {
+					invalidArgs: args.title
 				});
 			}
+
+			if (!authorAlreadyExists) {
+				const author = new Author({
+					name: args.author,
+					born: null
+				});
+				await author.save();
+			}
+
+			const populatedAuthor = await Author.findOne({ name: args.author });
+			const book = new Book({ ...args, author: populatedAuthor });
+
+			await book.save();
 			return book;
 		},
-		editAuthor: (root, args) => {
-			// const author = authors.find((a) => a.name === args.name);
-			// if (author) {
-			// 	authors = authors.map((a) =>
-			// 		a.name === args.name ? { ...a, born: args.setBornTo } : a
-			// 	);
-			// 	return { ...author, born: args.setBornTo };
-			// }
-			// return null;
+		editAuthor: async (root, args) => {
+			const author = await Author.findOne({ name: args.name });
+
+			if (!author) {
+				throw new UserInputError('Author not found', {
+					invalidArgs: args.name
+				});
+			}
+
+			await Author.updateOne(
+				{ _id: author._id },
+				{ $set: { born: args.setBornTo } }
+			);
+			const updatedAuthor = await Author.findOne({ name: args.name });
+			return updatedAuthor;
 		}
 	}
 };
