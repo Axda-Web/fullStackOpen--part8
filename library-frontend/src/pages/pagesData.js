@@ -2,6 +2,7 @@ import Books from './Books';
 import Authors from './Authors';
 import NewBook from './NewBook';
 import BirthyearForm from './BirthyearForm';
+import Login from './Login';
 
 const pagesData = [
 	{
@@ -23,6 +24,11 @@ const pagesData = [
 		path: '/edit-birthyear',
 		component: <BirthyearForm />,
 		title: 'edit-birthyear'
+	},
+	{
+		path: '/login',
+		component: <Login />,
+		title: 'login'
 	}
 ];
 
