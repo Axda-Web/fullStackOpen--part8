@@ -125,14 +125,26 @@ const resolvers = {
 					name: args.author,
 					born: null
 				});
-				await author.save();
+				try {
+					await author.save();
+				} catch (error) {
+					throw new UserInputError(error.message, {
+						invalidArgs: args
+					});
+				}
 			}
 
 			const populatedAuthor = await Author.findOne({ name: args.author });
 			const book = new Book({ ...args, author: populatedAuthor });
 
-			await book.save();
-			return book;
+			try {
+				await book.save();
+				return book;
+			} catch (error) {
+				throw new UserInputError(error.message, {
+					invalidArgs: args
+				});
+			}
 		},
 		editAuthor: async (root, args) => {
 			const author = await Author.findOne({ name: args.name });
