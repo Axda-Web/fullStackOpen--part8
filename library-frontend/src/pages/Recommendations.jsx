@@ -5,27 +5,29 @@ const Recommendations = () => {
 	const {
 		loading: userLoading,
 		error: userError,
-		data: { me }
+		data: userData
 	} = useQuery(ME);
 
 	const {
 		loading: booksLoading,
 		error: booksError,
-		data: { allBooks }
+		data: booksData
 	} = useQuery(ALL_BOOKS, {
-		variables: { genre: me.favoriteGenre },
-		skip: !me.favoriteGenre
+		variables: { genre: userData?.me.favoriteGenre },
+		skip: !userData?.me.favoriteGenre
 	});
 
 	if (userLoading || booksLoading) return <div>loading...</div>;
-	if (userError || booksError) return <div>{userError.message}</div>;
+	if (userError || booksError) return <div>Error</div>;
 
 	return (
 		<div>
 			<h2>Recommendations</h2>
 			<p>
 				Books in your favorite genre{' '}
-				<span style={{ fontWeight: 'bold' }}>{me.favoriteGenre}</span>
+				<span style={{ fontWeight: 'bold' }}>
+					{userData?.me.favoriteGenre}
+				</span>
 			</p>
 			<table>
 				<tbody>
@@ -34,7 +36,7 @@ const Recommendations = () => {
 						<th>author</th>
 						<th>published</th>
 					</tr>
-					{allBooks.map((b) => (
+					{booksData?.allBooks.map((b) => (
 						<tr key={b.title}>
 							<td>{b.title}</td>
 							<td>{b.author.name}</td>
