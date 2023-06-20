@@ -43,6 +43,11 @@ const Navbar = () => {
 						<Link to="/edit-birthyear">Edit Birthyear</Link>
 					</li>
 				)}
+				{token && (
+					<li style={{ listStyleType: 'none' }}>
+						<Link to="/recommendations">Recommendations</Link>
+					</li>
+				)}
 				{token ? (
 					<li style={{ listStyleType: 'none' }}>
 						<button onClick={handleLogoutClick}>Logout</button>

@@ -65,8 +65,9 @@ const Books = () => {
 				</tbody>
 			</table>
 			<div style={{ marginTop: '10px' }}>
-				{genres.map((g) => (
+				{genres.map((g, i) => (
 					<button
+						key={i}
 						style={{
 							marginRight: '10px'
 						}}

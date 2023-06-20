@@ -3,6 +3,7 @@ import Authors from './Authors';
 import NewBook from './NewBook';
 import BirthyearForm from './BirthyearForm';
 import Login from './Login';
+import Recommendations from './Recommendations';
 
 const pagesData = [
 	{
@@ -29,6 +30,11 @@ const pagesData = [
 		path: '/login',
 		component: <Login />,
 		title: 'login'
+	},
+	{
+		path: '/recommendations',
+		component: <Recommendations />,
+		title: 'recommendations'
 	}
 ];
 
