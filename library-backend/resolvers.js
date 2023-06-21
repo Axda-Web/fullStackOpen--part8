@@ -1,5 +1,7 @@
 const { GraphQLError } = require('graphql');
 const { UserInputError } = require('apollo-server-errors');
+const { PubSub } = require('graphql-subscriptions');
+const pubsub = new PubSub();
 const jwt = require('jsonwebtoken');
 const Author = require('./models/author');
 const Book = require('./models/book');
@@ -103,6 +105,7 @@ const resolvers = {
 
 			try {
 				await book.save();
+				pubsub.publish('BOOK_ADDED', { bookAdded: book });
 				return book;
 			} catch (error) {
 				throw new UserInputError(error.message, {
@@ -165,6 +168,11 @@ const resolvers = {
 			};
 
 			return { value: jwt.sign(userForToken, process.env.JWT_SECRET) };
+		}
+	},
+	Subscription: {
+		bookAdded: {
+			subscribe: () => pubsub.asyncIterator('BOOK_ADDED')
 		}
 	}
 };
