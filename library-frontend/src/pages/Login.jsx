@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useMutation } from '@apollo/client';
-import { LOGIN } from '../queries';
+import { LOGIN, ME, ALL_AUTHORS, ALL_BOOKS } from '../queries';
 import { useTokenDispatch } from '../TokenContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -12,6 +12,7 @@ const LoginForm = (/*{ setError }*/) => {
 	const navigate = useNavigate();
 
 	const [login, result] = useMutation(LOGIN, {
+		refetchQueries: [{ query: ALL_AUTHORS }, { query: ALL_BOOKS }],
 		onError: (error) => {
 			// setError(error.graphQLErrors[0]?.message);
 			console.log(

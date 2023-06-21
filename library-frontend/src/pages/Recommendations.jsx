@@ -13,8 +13,8 @@ const Recommendations = () => {
 		error: booksError,
 		data: booksData
 	} = useQuery(ALL_BOOKS, {
-		variables: { genre: userData?.me.favoriteGenre },
-		skip: !userData?.me.favoriteGenre
+		variables: { genre: userData?.me.favoriteGenre }
+		// skip: !userData?.me.favoriteGenre
 	});
 
 	if (userLoading || booksLoading) return <div>loading...</div>;
