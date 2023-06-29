@@ -1,26 +1,51 @@
 import { useState } from 'react';
+import { useMutation } from '@apollo/client';
+import { ADD_BOOK, ALL_BOOKS, ALL_AUTHORS, GENRES } from '../queries';
+import { useNavigate } from 'react-router-dom';
 
-const NewBook = (props) => {
+const NewBook = () => {
 	const [title, setTitle] = useState('');
 	const [author, setAuthor] = useState('');
 	const [published, setPublished] = useState('');
 	const [genre, setGenre] = useState('');
 	const [genres, setGenres] = useState([]);
 
-	if (!props.show) {
-		return null;
-	}
+	const navigate = useNavigate();
+
+	const [addBook] = useMutation(ADD_BOOK, {
+		refetchQueries: [
+			{ query: ALL_BOOKS },
+			{ query: ALL_BOOKS, variables: { genre } },
+			{ query: ALL_AUTHORS },
+			{ query: GENRES }
+		],
+		onError: (error) => {
+			const messages = error.graphQLErrors[0]?.message;
+			console.log(
+				'🚀 ~ file: NewBook.js:16 ~ NewBook ~ messages:',
+				messages
+			);
+		}
+	});
 
 	const submit = async (event) => {
 		event.preventDefault();
 
-		console.log('add book...');
+		await addBook({
+			variables: {
+				title,
+				published: parseInt(published),
+				author,
+				genres
+			}
+		});
 
 		setTitle('');
 		setPublished('');
 		setAuthor('');
 		setGenres([]);
 		setGenre('');
+		navigate('/');
 	};
 
 	const addGenre = () => {
